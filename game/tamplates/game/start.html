@@ -1,0 +1,29 @@
+{% extends 'game/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card game-card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">Начать новую игру</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="player_name" class="form-label">Введите ваше имя:</label>
+                            <input type="text" class="form-control" id="player_name" name="player_name" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-play"></i> Начать выживание
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

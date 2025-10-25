@@ -1,0 +1,48 @@
+{% extends 'game/base.html' %}
+
+{% block content %}
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 mb-4">Death by AI</h1>
+        <p class="lead mb-4">Сможете ли вы выжить в смертельно опасных ситуациях, созданных искусственным интеллектом?</p>
+        <a href="{% url 'start_game' %}" class="btn btn-light btn-lg me-3">
+            <i class="fas fa-play"></i> Начать игру
+        </a>
+        <a href="{% url 'leaderboard' %}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-trophy"></i> Лидеры
+        </a>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card game-card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-bolt fa-3x text-primary mb-3"></i>
+                    <h3>Быстрая игра</h3>
+                    <p>90 секунд на спасение. Только вы и смертельная ситуация.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card game-card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-brain fa-3x text-success mb-3"></i>
+                    <h3>ИИ оценка</h3>
+                    <p>DeepSeek AI оценит ваши шансы на выживание.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card game-card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-warning mb-3"></i>
+                    <h3>Соревнуйтесь</h3>
+                    <p>Поднимитесь на вершину таблицы лидеров.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -122,4 +122,11 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+import os
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
 DEEPSEEK_API_KEY = 'sk-6717c728c8cb4f3ca3cc8e7d568dcb7b'
