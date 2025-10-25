@@ -1,0 +1,73 @@
+{% extends 'game/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card game-card fade-in">
+                <div class="card-header bg-info text-white">
+                    <h3 class="text-center mb-0"><i class="fas fa-info-circle"></i> О проекте Death by AI</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>🎯 Цель игры</h5>
+                            <p>Развлечь вас необычной игрой с элементами выживания.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>⚡ Как играть</h5>
+                            <ul>
+                                <li>У вас есть 90 секунд на ответ</li>
+                                <li>3 жизни на всю игру</li>
+                                <li>+1 очко за успешное выживание</li>
+                                <li>ИИ оценивает логичность вашего плана</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <h5>🛠️ Технологии</h5>
+                    <div class="row text-center mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <i class="fab fa-python fa-2x text-primary mb-2"></i>
+                                    <h6>Django</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <i class="fab fa-js-square fa-2x text-warning mb-2"></i>
+                                    <h6>JavaScript</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <i class="fab fa-bootstrap fa-2x text-purple mb-2"></i>
+                                    <h6>Bootstrap 5</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <i class="fas fa-brain fa-2x text-success mb-2"></i>
+                                    <h6>DeepSeek AI</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Важно!</h6>
+                        <p class="mb-0">Это игровой проект. Ситуации вымышлены, а советы по выживанию не являются профессиональными рекомендациями.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -190,3 +190,6 @@ def result_page(request, session_id):
         'player_action': latest_action,
         'survived': latest_action.survived if latest_action else False
     })
+def about(request):
+    """Страница о проекте"""
+    return render(request, 'game/about.html')

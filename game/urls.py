@@ -9,4 +9,5 @@ urlpatterns = [
     path('game/<int:session_id>/result/', views.result_page, name='result_page'),
     path('leaderboard/', views.leaderboard, name='leaderboard'),
     path('create_situation/', views.create_situation, name='create_situation'),
+    path('about/', views.about, name='about'),
 ]
