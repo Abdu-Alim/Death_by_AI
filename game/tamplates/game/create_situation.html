@@ -1,0 +1,51 @@
+{% extends 'game/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card game-card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="text-center mb-0"><i class="fas fa-plus-circle"></i> Создать ситуацию</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Категория:</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Выберите категорию...</option>
+                                <option value="nature">Природа</option>
+                                <option value="disaster">Катастрофа</option>
+                                <option value="fantasy">Фантастика</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="situation_text" class="form-label">Описание ситуации:</label>
+                            <textarea 
+                                class="form-control" 
+                                id="situation_text" 
+                                name="situation_text" 
+                                rows="6" 
+                                placeholder="Опишите смертельно опасную ситуацию..."
+                                required
+                            ></textarea>
+                            <div class="form-text">
+                                Будьте креативны! Создайте по-настоящему сложную ситуацию для выживания.
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save"></i> Сохранить ситуацию
+                            </button>
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Назад
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
