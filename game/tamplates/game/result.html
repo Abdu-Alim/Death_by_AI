@@ -1,0 +1,101 @@
+{% extends 'game/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card game-card">
+                <div class="card-header {% if survived %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h3 class="text-center mb-0">
+                        {% if survived %}
+                            <i class="fas fa-check-circle"></i> Вы выжили!
+                        {% else %}
+                            <i class="fas fa-times-circle"></i> Вы не выжили
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Статус -->
+                    <div class="text-center mb-4">
+                        {% if survived %}
+                            <div class="alert alert-success">
+                                <h4>🎉 Поздравляем!</h4>
+                                <p class="mb-0">Вы получили +1 очко!</p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger">
+                                <h4>💀 Потеряна 1 жизнь</h4>
+                                <p class="mb-0">У вас осталось жизней: {{ game_session.lives }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Фидбэк от ИИ -->
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-robot"></i> Вердикт ИИ:</h5>
+                        <p class="mb-0">{{ player_action.feedback }}</p>
+                    </div>
+
+                    <!-- Ваш ответ -->
+                    <div class="mb-4">
+                        <h5>Ваш план:</h5>
+                        <div class="border p-3 rounded bg-light">
+                            {{ player_action.action_text|linebreaks }}
+                        </div>
+                    </div>
+
+                    <!-- Статистика -->
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ game_session.score }}</h5>
+                                    <p class="card-text">Очки</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ game_session.lives }}</h5>
+                                    <p class="card-text">Жизни</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        {% if game_session.is_active %}Активна{% else %}Завершена{% endif %}
+                                    </h5>
+                                    <p class="card-text">Статус</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Кнопки действий -->
+                    <div class="d-grid gap-2">
+                        {% if game_session.is_active and game_session.lives > 0 %}
+                            <a href="{% url 'game_page' game_session.id %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-play"></i> Следующая ситуация
+                            </a>
+                        {% else %}
+                            <div class="alert alert-warning text-center">
+                                <h5>Игра завершена!</h5>
+                                <p>Ваш финальный счет: {{ game_session.score }}</p>
+                            </div>
+                        {% endif %}
+                        <a href="{% url 'leaderboard' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-trophy"></i> Таблица лидеров
+                        </a>
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home"></i> На главную
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

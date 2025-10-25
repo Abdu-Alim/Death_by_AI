@@ -35,20 +35,15 @@
                     </div>
 
                     <!-- Форма ответа -->
-                    <form id="survival-form" method="post">
+                    <form id="survival-form" method="post" action="{% url 'submit_action' game_session.id %}">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label for="action_text" class="form-label">
                                 <strong>Ваш план выживания:</strong>
                             </label>
-                            <textarea 
-                                class="form-control" 
-                                id="action_text" 
-                                name="action_text" 
-                                rows="6" 
+                            <textarea class="form-control" id="action_text" name="action_text" rows="6"
                                 placeholder="Опишите подробно, как вы планируете выжить в этой ситуации..."
-                                required
-                            ></textarea>
+                                required></textarea>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-danger btn-lg" id="submit-btn">
@@ -65,37 +60,37 @@
 
 {% block scripts %}
 <script>
-// Таймер обратного отсчета
-let timeLeft = 90;
-const timerElement = document.getElementById('timer');
-const form = document.getElementById('survival-form');
-const textarea = document.getElementById('action_text');
-const submitBtn = document.getElementById('submit-btn');
+    // Таймер обратного отсчета
+    let timeLeft = 90;
+    const timerElement = document.getElementById('timer');
+    const form = document.getElementById('survival-form');
+    const textarea = document.getElementById('action_text');
+    const submitBtn = document.getElementById('submit-btn');
 
-function updateTimer() {
-    timerElement.textContent = timeLeft;
-    
-    // Меняем цвет при малом времени
-    if (timeLeft <= 10) {
-        timerElement.className = 'text-danger blink';
-    } else if (timeLeft <= 30) {
-        timerElement.className = 'text-warning';
+    function updateTimer() {
+        timerElement.textContent = timeLeft;
+
+        // Меняем цвет при малом времени
+        if (timeLeft <= 10) {
+            timerElement.className = 'text-danger blink';
+        } else if (timeLeft <= 30) {
+            timerElement.className = 'text-warning';
+        }
+
+        if (timeLeft <= 0) {
+            // Авто-отправка формы при окончании времени
+            form.submit();
+        } else {
+            timeLeft--;
+        }
     }
-    
-    if (timeLeft <= 0) {
-        // Авто-отправка формы при окончании времени
-        form.submit();
-    } else {
-        timeLeft--;
-    }
-}
 
-// Запускаем таймер
-const timer = setInterval(updateTimer, 1000);
+    // Запускаем таймер
+    const timer = setInterval(updateTimer, 1000);
 
-// Стиль для мигания
-const style = document.createElement('style');
-style.textContent = `
+    // Стиль для мигания
+    const style = document.createElement('style');
+    style.textContent = `
     .blink {
         animation: blink 1s infinite;
     }
@@ -115,6 +110,6 @@ style.textContent = `
         align-items: center;
     }
 `;
-document.head.appendChild(style);
+    document.head.appendChild(style);
 </script>
 {% endblock %}
