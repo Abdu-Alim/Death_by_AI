@@ -10,4 +10,5 @@ urlpatterns = [
     path('leaderboard/', views.leaderboard, name='leaderboard'),
     path('create_situation/', views.create_situation, name='create_situation'),
     path('about/', views.about, name='about'),
+    path('generate-ai-situation/', views.generate_ai_situation, name='generate_ai_situation'),
 ]

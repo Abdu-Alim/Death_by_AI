@@ -9,7 +9,44 @@
                     <h3 class="text-center mb-0"><i class="fas fa-plus-circle"></i> Создать ситуацию</h3>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+                    
+                    <!-- Кнопка генерации AI -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-robot"></i> Сгенерировать ситуацию через ИИ</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <select class="form-select" id="ai-category">
+                                        <option value="nature">Природа</option>
+                                        <option value="disaster">Катастрофа</option>
+                                        <option value="fantasy">Фантастика</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" id="generate-ai" class="btn btn-info w-100">
+                                        <i class="fas fa-magic"></i> Сгенерировать
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="ai-result" class="mt-3" style="display: none;">
+                                <div class="alert alert-info">
+                                    <strong>Сгенерированная ситуация:</strong>
+                                    <p id="ai-situation-text" class="mb-2"></p>
+                                    <button type="button" id="use-ai-situation" class="btn btn-sm btn-success">
+                                        Использовать эту ситуацию
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Форма ручного создания -->
+                    <form method="post" id="situation-form">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label for="category" class="form-label">Категория:</label>
@@ -48,4 +85,58 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generate-ai');
+    const aiResult = document.getElementById('ai-result');
+    const aiSituationText = document.getElementById('ai-situation-text');
+    const useAiSituationBtn = document.getElementById('use-ai-situation');
+    const situationTextarea = document.getElementById('situation_text');
+    const categorySelect = document.getElementById('category');
+    const aiCategorySelect = document.getElementById('ai-category');
+    
+    generateBtn.addEventListener('click', function() {
+        const category = aiCategorySelect.value;
+        
+        // Показываем индикатор загрузки
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерация...';
+        generateBtn.disabled = true;
+        
+        // Отправляем запрос на генерацию
+        fetch('/generate-ai-situation/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: `category=${category}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                aiSituationText.textContent = data.situation;
+                aiResult.style.display = 'block';
+            } else {
+                alert('Ошибка генерации: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Ошибка сети: ' + error);
+        })
+        .finally(() => {
+            generateBtn.innerHTML = '<i class="fas fa-magic"></i> Сгенерировать';
+            generateBtn.disabled = false;
+        });
+    });
+    
+    useAiSituationBtn.addEventListener('click', function() {
+        situationTextarea.value = aiSituationText.textContent;
+        categorySelect.value = aiCategorySelect.value;
+        aiResult.style.display = 'none';
+    });
+});
+</script>
 {% endblock %}

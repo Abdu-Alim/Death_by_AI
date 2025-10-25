@@ -1,10 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from .models import Player, Situation, GameSession, PlayerAction
+from .api_client import DeepSeekClient
 import random
-import json
-import random
-from django.views.decorators.csrf import csrf_exempt
 
 def home(request):
     """Главная страница"""
@@ -15,6 +13,9 @@ def start_game(request):
     if request.method == 'POST':
         player_name = request.POST.get('player_name')
         
+        if not player_name:
+            return render(request, 'game/start.html', {'error': 'Введите имя игрока'})
+        
         # Создаем или находим игрока
         player, created = Player.objects.get_or_create(name=player_name)
         
@@ -23,10 +24,12 @@ def start_game(request):
         if situations:
             situation = random.choice(situations)
         else:
-            # Если нет ситуаций, создаем базовую
+            # Если нет ситуаций, создаем через API
+            api_client = DeepSeekClient()
+            situation_text = api_client.generate_situation('nature')
             situation = Situation.objects.create(
-                text="Вы оказались один в джунглях ночью. Вокруг слышны странные звуки.",
-                category="nature"
+                text=situation_text,
+                category='nature'
             )
         
         # Создаем игровую сессию
@@ -44,114 +47,30 @@ def start_game(request):
 def game_page(request, session_id):
     """Страница игры"""
     game_session = get_object_or_404(GameSession, id=session_id)
+    
+    # Проверяем, активна ли еще сессия
+    if not game_session.is_active or game_session.lives <= 0:
+        return redirect('result_page', session_id=session_id)
+    
     return render(request, 'game/game.html', {
         'game_session': game_session
     })
 
-def leaderboard(request):
-    """Таблица лидеров"""
-    leaders = GameSession.objects.filter(is_active=False).order_by('-score')[:10]
-    return render(request, 'game/leaderboard.html', {
-        'leaders': leaders
-    })
-
-def create_situation(request):
-    """Создание пользовательской ситуации"""
-    if request.method == 'POST':
-        text = request.POST.get('situation_text')
-        category = request.POST.get('category')
-        
-        Situation.objects.create(
-            text=text,
-            category=category,
-            is_user_created=True
-        )
-        
-        return redirect('home')
-    
-    return render(request, 'game/create_situation.html')
-
-# ЗАМЕНИТЕ функцию evaluate_survival на эту улучшенную версию:
-def evaluate_survival(action_text, situation_text):
-    """
-    Улучшенная функция оценки выживания с учетом категории ситуации
-    """
-    action_lower = action_text.lower()
-    
-    # Более сложная система ключевых слов по категориям
-    category_keywords = {
-        'nature': {
-            'positive': ['укрытие', 'огонь', 'сигнал', 'вода', 'ориентация', 'сохранение тепла', 'ягоды', 'рыба', 'охота'],
-            'negative': ['паника', 'бежать', 'сдаться', 'кричать', 'отчаяние', 'бездействие']
-        },
-        'disaster': {
-            'positive': ['эвакуация', 'помощь', 'медицина', 'укрытие', 'запас', 'план', 'спокойствие', 'организация'],
-            'negative': ['паника', 'толпа', 'замкнутость', 'импульсивность', 'одиночество']
-        },
-        'fantasy': {
-            'positive': ['анализ', 'технологии', 'изобретательность', 'логика', 'адаптация', 'исследование', 'хитрость'],
-            'negative': ['неверие', 'отказ', 'страх', 'бегство', 'агрессия']
-        }
-    }
-    
-    # Определяем категорию ситуации (упрощенно)
-    category = 'nature'  # по умолчанию
-    if 'космическ' in situation_text.lower() or 'робот' in situation_text.lower():
-        category = 'fantasy'
-    elif 'землетрясение' in situation_text.lower() or 'цунами' in situation_text.lower() or 'авария' in situation_text.lower():
-        category = 'disaster'
-    
-    # Получаем ключевые слова для категории
-    keywords = category_keywords.get(category, category_keywords['nature'])
-    
-    # Подсчитываем баллы
-    score = 0
-    feedback_parts = []
-    
-    for positive_word in keywords['positive']:
-        if positive_word in action_lower:
-            score += 2
-            feedback_parts.append(f"✓ Упоминание '{positive_word}' увеличивает шансы на выживание")
-    
-    for negative_word in keywords['negative']:
-        if negative_word in action_lower:
-            score -= 3
-            feedback_parts.append(f"✗ '{negative_word}' может снизить ваши шансы")
-    
-    # Дополнительные факторы
-    if len(action_text) > 100:
-        score += 1  # Детальный план
-        feedback_parts.append("✓ Детальный план увеличивает шансы")
-    
-    if 'план' in action_lower or 'стратегия' in action_lower:
-        score += 1
-        feedback_parts.append("✓ Наличие плана - хороший признак")
-    
-    # Определяем результат
-    survived = score >= 3
-    
-    # Формируем фидбэк
-    if survived:
-        main_feedback = "✅ ИИ оценил ваш план как эффективный! Вы демонстрируете хорошие навыки выживания."
-    else:
-        main_feedback = "❌ ИИ счел ваш план недостаточно продуманным. В реальной ситуации шансы были бы низкими."
-    
-    # Объединяем все части фидбэка
-    if feedback_parts:
-        detailed_feedback = "\n".join(feedback_parts)
-        full_feedback = f"{main_feedback}\n\nАнализ:\n{detailed_feedback}"
-    else:
-        full_feedback = main_feedback + "\n\nПлан слишком общий, попробуйте быть конкретнее."
-    
-    return survived, full_feedback
 def submit_action(request, session_id):
     """Обработка действия игрока"""
     if request.method == 'POST':
         game_session = get_object_or_404(GameSession, id=session_id)
         action_text = request.POST.get('action_text', '')
         
-        # Оцениваем выживание (пока заглушка)
-        survived, feedback = evaluate_survival(action_text, game_session.situation.text)
+        if not action_text:
+            return redirect('game_page', session_id=session_id)
+        
+        # Используем API для оценки
+        api_client = DeepSeekClient()
+        survived, feedback = api_client.evaluate_survival_plan(
+            game_session.situation.text, 
+            action_text
+        )
         
         # Создаем запись о действии
         player_action = PlayerAction.objects.create(
@@ -172,11 +91,7 @@ def submit_action(request, session_id):
             
         game_session.save()
         
-        return render(request, 'game/result.html', {
-            'game_session': game_session,
-            'player_action': player_action,
-            'survived': survived
-        })
+        return redirect('result_page', session_id=session_id)
     
     return redirect('game_page', session_id=session_id)
 
@@ -190,6 +105,59 @@ def result_page(request, session_id):
         'player_action': latest_action,
         'survived': latest_action.survived if latest_action else False
     })
+
+def leaderboard(request):
+    """Таблица лидеров"""
+    # Получаем лучшие результаты (игроки с максимальным счетом)
+    best_sessions = GameSession.objects.filter(is_active=False).order_by('-score', '-id')[:10]
+    return render(request, 'game/leaderboard.html', {
+        'leaders': best_sessions
+    })
+
+def create_situation(request):
+    """Создание пользовательской ситуации"""
+    if request.method == 'POST':
+        text = request.POST.get('situation_text')
+        category = request.POST.get('category')
+        
+        if not text or not category:
+            return render(request, 'game/create_situation.html', {
+                'error': 'Заполните все поля'
+            })
+        
+        Situation.objects.create(
+            text=text,
+            category=category,
+            is_user_created=True
+        )
+        
+        return redirect('home')
+    
+    return render(request, 'game/create_situation.html')
+
 def about(request):
     """Страница о проекте"""
     return render(request, 'game/about.html')
+
+def generate_ai_situation(request):
+    """Генерация ситуации через AI (AJAX)"""
+    if request.method == 'POST':
+        category = request.POST.get('category', 'nature')
+        
+        api_client = DeepSeekClient()
+        situation_text = api_client.generate_situation(category)
+        
+        # Сохраняем в базу
+        situation = Situation.objects.create(
+            text=situation_text,
+            category=category,
+            is_user_created=False
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'situation': situation_text,
+            'situation_id': situation.id
+        })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
