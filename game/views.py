@@ -71,37 +71,79 @@ def create_situation(request):
     
     return render(request, 'game/create_situation.html')
 
+# ЗАМЕНИТЕ функцию evaluate_survival на эту улучшенную версию:
 def evaluate_survival(action_text, situation_text):
     """
-    Функция для оценки выживания (пока заглушка)
-    В День 4 заменим на реальный вызов DeepSeek API
+    Улучшенная функция оценки выживания с учетом категории ситуации
     """
-    # Простая логика оценки по ключевым словам
-    positive_keywords = ['огонь', 'укрытие', 'помощь', 'спасение', 'сигнал', 'вода', 'еда', 'тепло']
-    negative_keywords = ['сдаться', 'плакать', 'бежать', 'паника', 'отчаяние']
-    
     action_lower = action_text.lower()
+    
+    # Более сложная система ключевых слов по категориям
+    category_keywords = {
+        'nature': {
+            'positive': ['укрытие', 'огонь', 'сигнал', 'вода', 'ориентация', 'сохранение тепла', 'ягоды', 'рыба', 'охота'],
+            'negative': ['паника', 'бежать', 'сдаться', 'кричать', 'отчаяние', 'бездействие']
+        },
+        'disaster': {
+            'positive': ['эвакуация', 'помощь', 'медицина', 'укрытие', 'запас', 'план', 'спокойствие', 'организация'],
+            'negative': ['паника', 'толпа', 'замкнутость', 'импульсивность', 'одиночество']
+        },
+        'fantasy': {
+            'positive': ['анализ', 'технологии', 'изобретательность', 'логика', 'адаптация', 'исследование', 'хитрость'],
+            'negative': ['неверие', 'отказ', 'страх', 'бегство', 'агрессия']
+        }
+    }
+    
+    # Определяем категорию ситуации (упрощенно)
+    category = 'nature'  # по умолчанию
+    if 'космическ' in situation_text.lower() or 'робот' in situation_text.lower():
+        category = 'fantasy'
+    elif 'землетрясение' in situation_text.lower() or 'цунами' in situation_text.lower() or 'авария' in situation_text.lower():
+        category = 'disaster'
+    
+    # Получаем ключевые слова для категории
+    keywords = category_keywords.get(category, category_keywords['nature'])
     
     # Подсчитываем баллы
     score = 0
-    for keyword in positive_keywords:
-        if keyword in action_lower:
-            score += 2
+    feedback_parts = []
     
-    for keyword in negative_keywords:
-        if keyword in action_lower:
-            score -= 1
+    for positive_word in keywords['positive']:
+        if positive_word in action_lower:
+            score += 2
+            feedback_parts.append(f"✓ Упоминание '{positive_word}' увеличивает шансы на выживание")
+    
+    for negative_word in keywords['negative']:
+        if negative_word in action_lower:
+            score -= 3
+            feedback_parts.append(f"✗ '{negative_word}' может снизить ваши шансы")
+    
+    # Дополнительные факторы
+    if len(action_text) > 100:
+        score += 1  # Детальный план
+        feedback_parts.append("✓ Детальный план увеличивает шансы")
+    
+    if 'план' in action_lower or 'стратегия' in action_lower:
+        score += 1
+        feedback_parts.append("✓ Наличие плана - хороший признак")
     
     # Определяем результат
-    survived = score > 2
-    feedback = ""
+    survived = score >= 3
     
+    # Формируем фидбэк
     if survived:
-        feedback = "✅ ИИ оценил ваш план как эффективный! Вы выжили благодаря продуманным действиям."
+        main_feedback = "✅ ИИ оценил ваш план как эффективный! Вы демонстрируете хорошие навыки выживания."
     else:
-        feedback = "❌ ИИ счел ваш план недостаточно эффективным. В реальной ситуации шансы на выживание были бы низкими."
+        main_feedback = "❌ ИИ счел ваш план недостаточно продуманным. В реальной ситуации шансы были бы низкими."
     
-    return survived, feedback
+    # Объединяем все части фидбэка
+    if feedback_parts:
+        detailed_feedback = "\n".join(feedback_parts)
+        full_feedback = f"{main_feedback}\n\nАнализ:\n{detailed_feedback}"
+    else:
+        full_feedback = main_feedback + "\n\nПлан слишком общий, попробуйте быть конкретнее."
+    
+    return survived, full_feedback
 def submit_action(request, session_id):
     """Обработка действия игрока"""
     if request.method == 'POST':

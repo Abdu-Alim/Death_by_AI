@@ -58,58 +58,108 @@
 </div>
 {% endblock %}
 
+<!-- ЗАМЕНИТЕ блок scripts в game.html на этот: -->
 {% block scripts %}
 <script>
-    // Таймер обратного отсчета
-    let timeLeft = 90;
-    const timerElement = document.getElementById('timer');
-    const form = document.getElementById('survival-form');
-    const textarea = document.getElementById('action_text');
-    const submitBtn = document.getElementById('submit-btn');
-
-    function updateTimer() {
-        timerElement.textContent = timeLeft;
-
-        // Меняем цвет при малом времени
-        if (timeLeft <= 10) {
-            timerElement.className = 'text-danger blink';
-        } else if (timeLeft <= 30) {
-            timerElement.className = 'text-warning';
+// Улучшенный таймер с визуальными эффектами
+class GameTimer {
+    constructor(totalTime) {
+        this.totalTime = totalTime;
+        this.timeLeft = totalTime;
+        this.timerElement = document.getElementById('timer');
+        this.timerCircle = document.querySelector('.timer-circle');
+        this.isRunning = false;
+        this.intervalId = null;
+        
+        this.initializeTimer();
+    }
+    
+    initializeTimer() {
+        this.updateDisplay();
+        this.start();
+    }
+    
+    start() {
+        this.isRunning = true;
+        this.intervalId = setInterval(() => this.tick(), 1000);
+    }
+    
+    tick() {
+        this.timeLeft--;
+        this.updateDisplay();
+        
+        if (this.timeLeft <= 0) {
+            this.timeUp();
         }
-
-        if (timeLeft <= 0) {
-            // Авто-отправка формы при окончании времени
-            form.submit();
-        } else {
-            timeLeft--;
+    }
+    
+    updateDisplay() {
+        this.timerElement.textContent = this.timeLeft;
+        
+        // Меняем стили в зависимости от оставшегося времени
+        if (this.timeLeft <= 10) {
+            this.timerCircle.className = 'timer-circle timer-critical blink';
+        } else if (this.timeLeft <= 30) {
+            this.timerCircle.className = 'timer-circle timer-warning';
+        }
+        
+        // Воспроизводим звуковые предупреждения
+        if (this.timeLeft === 10) {
+            this.playWarningSound();
         }
     }
+    
+    timeUp() {
+        this.stop();
+        // Авто-отправка формы
+        document.getElementById('survival-form').submit();
+    }
+    
+    stop() {
+        this.isRunning = false;
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+        }
+    }
+    
+    playWarningSound() {
+        // Создаем простой звуковой сигнал с помощью Web Audio API
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (e) {
+            console.log('Audio not supported');
+        }
+    }
+}
 
-    // Запускаем таймер
-    const timer = setInterval(updateTimer, 1000);
-
-    // Стиль для мигания
-    const style = document.createElement('style');
-    style.textContent = `
-    .blink {
-        animation: blink 1s infinite;
-    }
-    @keyframes blink {
-        0% { opacity: 1; }
-        50% { opacity: 0.3; }
-        100% { opacity: 1; }
-    }
-    .timer-circle {
-        width: 120px;
-        height: 120px;
-        border: 4px solid #dc3545;
-        border-radius: 50%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-`;
-    document.head.appendChild(style);
+// Инициализация таймера когда страница загружена
+document.addEventListener('DOMContentLoaded', function() {
+    const timer = new GameTimer(90);
+    
+    // Автофокус на текстовом поле
+    document.getElementById('action_text').focus();
+    
+    // Предупреждение при попытке уйти со страницы
+    window.addEventListener('beforeunload', function(e) {
+        if (timer.isRunning && timer.timeLeft > 0) {
+            e.preventDefault();
+            e.returnValue = 'У вас есть незавершенная игра! Вы уверены, что хотите уйти?';
+        }
+    });
+});
 </script>
 {% endblock %}

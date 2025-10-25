@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Death by AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .hero-section {
@@ -12,26 +14,43 @@
             color: white;
             padding: 100px 0;
         }
+
         .game-card {
             border: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s;
         }
+
         .game-card:hover {
             transform: translateY(-5px);
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
                 <i class="fas fa-skull-crossbones"></i> Death by AI
             </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{% url 'home' %}">Главная</a>
-                <a class="nav-link" href="{% url 'leaderboard' %}">Лидеры</a>
-                <a class="nav-link" href="{% url 'create_situation' %}">Создать ситуацию</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{% url 'home' %}">
+                        <i class="fas fa-home"></i> Главная
+                    </a>
+                    <a class="nav-link" href="{% url 'start_game' %}">
+                        <i class="fas fa-play"></i> Новая игра
+                    </a>
+                    <a class="nav-link" href="{% url 'leaderboard' %}">
+                        <i class="fas fa-trophy"></i> Лидеры
+                    </a>
+                    <a class="nav-link" href="{% url 'create_situation' %}">
+                        <i class="fas fa-plus-circle"></i> Создать ситуацию
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -49,4 +68,5 @@
     {% block scripts %}
     {% endblock %}
 </body>
+
 </html>
