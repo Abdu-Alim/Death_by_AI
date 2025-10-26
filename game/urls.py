@@ -7,6 +7,7 @@ urlpatterns = [
     path('game/<int:session_id>/', views.game_page, name='game_page'),
     path('game/<int:session_id>/submit/', views.submit_action, name='submit_action'),
     path('game/<int:session_id>/result/', views.result_page, name='result_page'),
+    path('game/<int:session_id>/next/', views.next_situation, name='next_situation'),  # НОВЫЙ МАРШРУТ
     path('leaderboard/', views.leaderboard, name='leaderboard'),
     path('create_situation/', views.create_situation, name='create_situation'),
     path('about/', views.about, name='about'),

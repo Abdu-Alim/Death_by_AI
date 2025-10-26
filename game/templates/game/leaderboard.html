@@ -1,0 +1,64 @@
+{% extends 'game/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card game-card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="text-center mb-0"><i class="fas fa-trophy"></i> Таблица лидеров</h3>
+                </div>
+                <div class="card-body">
+                    {% if leaders %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Место</th>
+                                    <th>Игрок</th>
+                                    <th>Очки</th>
+                                    <th>Жизни</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- В таблице замените строки на: -->
+                                {% for leader in leaders %}
+                                <tr class="leaderboard-item">
+                                    <td>
+                                        {% if forloop.first %}
+                                        <span class="badge medal-gold">🥇</span>
+                                        {% elif forloop.counter == 2 %}
+                                        <span class="badge medal-silver">🥈</span>
+                                        {% elif forloop.counter == 3 %}
+                                        <span class="badge medal-bronze">🥉</span>
+                                        {% else %}
+                                        <span class="text-muted">#{{ forloop.counter }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>{{ leader.player.name }}</strong></td>
+                                    <td><span class="badge bg-success">{{ leader.score }}</span></td>
+                                    <td>
+                                        {% if leader.lives > 0 %}
+                                        <span class="text-success">{{ leader.lives }} ❤️</span>
+                                        {% else %}
+                                        <span class="text-danger">0 💀</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Пока нет результатов. Будьте первым!</p>
+                        <a href="{% url 'start_game' %}" class="btn btn-primary">Начать игру</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

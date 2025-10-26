@@ -1,0 +1,99 @@
+{% extends 'game/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card game-card">
+                <div class="card-header bg-danger text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Смертельная ситуация #{{ game_session.situation.id }}</h4>
+                        <div>
+                            <small class="text-light">ID сессии: {{ game_session.id }}</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-warning text-dark me-2">
+                                <i class="fas fa-heart"></i> Жизни: <span id="lives">{{ game_session.lives }}</span>
+                            </span>
+                            <span class="badge bg-success">
+                                <i class="fas fa-star"></i> Очки: <span id="score">{{ game_session.score }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Таймер -->
+                    <div class="text-center mb-4">
+                        <div class="timer-circle mx-auto">
+                            <h2 id="timer" class="text-danger">90</h2>
+                            <small>секунд осталось</small>
+                        </div>
+                    </div>
+
+                    <!-- Ситуация -->
+                    <div class="alert alert-dark mb-4">
+                        <h5>Ситуация:</h5>
+                        <p class="mb-0">{{ game_session.situation.text }}</p>
+                        <small class="text-muted">Категория: {{ game_session.situation.get_category_display }}</small>
+                    </div>
+                    <div class="text-center mb-3">
+                        <span class="badge bg-info">
+                            <i class="fas fa-sync-alt"></i> Раунд {{ game_session.playeraction_set.count|add:1 }}
+                        </span>
+                    </div>
+                    <!-- ДОБАВЬТЕ этот блок после заголовка ситуации -->
+                    <div class="text-center mb-3">
+                        <small class="text-muted">
+                            ID ситуации: {{ game_session.situation.id }} |
+                            ID сессии: {{ game_session.id }} |
+                            Действий: {{ game_session.playeraction_set.count }}
+                        </small>
+                    </div>
+
+                    <!-- Форма ответа -->
+                    <form id="survival-form" method="post" action="{% url 'submit_action' game_session.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="action_text" class="form-label">
+                                <strong>Ваш план выживания:</strong>
+                            </label>
+                            <textarea class="form-control" id="action_text" name="action_text" rows="6"
+                                placeholder="Опишите подробно, как вы планируете выжить в этой ситуации..."
+                                required></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-danger btn-lg" id="submit-btn">
+                                <i class="fas fa-paper-plane"></i> Отправить на оценку ИИ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ПРОСТОЙ таймер без сложной логики
+    let timeLeft = 90;
+    const timerElement = document.getElementById('timer');
+
+    function updateTimer() {
+        if (timeLeft <= 0) {
+            document.getElementById('survival-form').submit();
+        } else {
+            timerElement.textContent = timeLeft;
+            timeLeft--;
+            setTimeout(updateTimer, 1000);
+        }
+    }
+
+    // Запускаем таймер когда страница загружена
+    document.addEventListener('DOMContentLoaded', function () {
+        updateTimer();
+        console.log("Game page loaded. Situation ID:", "{{ game_session.situation.id }}");
+    });
+</script>
+{% endblock %}

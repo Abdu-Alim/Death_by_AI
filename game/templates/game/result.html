@@ -8,9 +8,9 @@
                 <div class="card-header {% if survived %}bg-success{% else %}bg-danger{% endif %} text-white">
                     <h3 class="text-center mb-0">
                         {% if survived %}
-                            <i class="fas fa-check-circle"></i> Вы выжили!
+                        <i class="fas fa-check-circle"></i> Вы выжили!
                         {% else %}
-                            <i class="fas fa-times-circle"></i> Вы не выжили
+                        <i class="fas fa-times-circle"></i> Вы не выжили
                         {% endif %}
                     </h3>
                 </div>
@@ -18,15 +18,15 @@
                     <!-- Статус -->
                     <div class="text-center mb-4">
                         {% if survived %}
-                            <div class="alert alert-success">
-                                <h4>🎉 Поздравляем!</h4>
-                                <p class="mb-0">Вы получили +1 очко!</p>
-                            </div>
+                        <div class="alert alert-success">
+                            <h4>🎉 Поздравляем!</h4>
+                            <p class="mb-0">Вы получили +1 очко!</p>
+                        </div>
                         {% else %}
-                            <div class="alert alert-danger">
-                                <h4>💀 Потеряна 1 жизнь</h4>
-                                <p class="mb-0">У вас осталось жизней: {{ game_session.lives }}</p>
-                            </div>
+                        <div class="alert alert-danger">
+                            <h4>💀 Потеряна 1 жизнь</h4>
+                            <p class="mb-0">У вас осталось жизней: {{ game_session.lives }}</p>
+                        </div>
                         {% endif %}
                     </div>
 
@@ -74,17 +74,22 @@
                         </div>
                     </div>
 
-                    <!-- Кнопки действий -->
                     <div class="d-grid gap-2">
                         {% if game_session.is_active and game_session.lives > 0 %}
-                            <a href="{% url 'game_page' game_session.id %}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-play"></i> Следующая ситуация
-                            </a>
+                        <a href="{% url 'next_situation' game_session.id %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-forward"></i> Следующая ситуация
+                        </a>
+                        <div class="text-center text-muted">
+                            <small>Следующая ситуация будет другой!</small>
+                        </div>
                         {% else %}
-                            <div class="alert alert-warning text-center">
-                                <h5>Игра завершена!</h5>
-                                <p>Ваш финальный счет: {{ game_session.score }}</p>
-                            </div>
+                        <div class="alert alert-warning text-center">
+                            <h5>Игра завершена!</h5>
+                            <p>Ваш финальный счет: {{ game_session.score }}</p>
+                        </div>
+                        <a href="{% url 'start_game' %}" class="btn btn-success btn-lg">
+                            <i class="fas fa-redo"></i> Новая игра
+                        </a>
                         {% endif %}
                         <a href="{% url 'leaderboard' %}" class="btn btn-outline-warning">
                             <i class="fas fa-trophy"></i> Таблица лидеров
@@ -98,4 +103,14 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+console.log("Result page loaded");
+console.log("Game session ID:", "{{ game_session.id }}");
+console.log("Situation ID:", "{{ game_session.situation.id }}");
+console.log("Lives:", "{{ game_session.lives }}");
+console.log("Score:", "{{ game_session.score }}");
+</script>
 {% endblock %}

@@ -11,28 +11,38 @@ def home(request):
 def start_game(request):
     """Начало новой игры"""
     if request.method == 'POST':
-        player_name = request.POST.get('player_name')
+        player_name = request.POST.get('player_name').strip()
         
         if not player_name:
             return render(request, 'game/start.html', {'error': 'Введите имя игрока'})
         
-        # Создаем или находим игрока
-        player, created = Player.objects.get_or_create(name=player_name)
+        # Нормализуем имя (убираем лишние пробелы, приводим к одному регистру)
+        normalized_name = ' '.join(player_name.split()).title()
+        
+        # Ищем существующего игрока или создаем нового
+        player, created = Player.objects.get_or_create(
+            name=normalized_name,
+            defaults={'name': normalized_name}
+        )
+        
+        # Если у игрока есть активные сессии, завершаем их
+        active_sessions = GameSession.objects.filter(player=player, is_active=True)
+        for session in active_sessions:
+            session.is_active = False
+            session.save()
         
         # Выбираем случайную ситуацию
         situations = Situation.objects.all()
         if situations:
             situation = random.choice(situations)
         else:
-            # Если нет ситуаций, создаем через API
-            api_client = DeepSeekClient()
-            situation_text = api_client.generate_situation('nature')
+            # Если нет ситуаций, создаем базовую
             situation = Situation.objects.create(
-                text=situation_text,
-                category='nature'
+                text="Вы оказались один в джунглях ночью. Вокруг слышны странные звуки.",
+                category="nature"
             )
         
-        # Создаем игровую сессию
+        # Создаем новую игровую сессию
         game_session = GameSession.objects.create(
             player=player,
             situation=situation,
@@ -45,10 +55,10 @@ def start_game(request):
     return render(request, 'game/start.html')
 
 def game_page(request, session_id):
-    """Страница игры"""
+    """Страница игры - ПРОСТАЯ ВЕРСИЯ"""
     game_session = get_object_or_404(GameSession, id=session_id)
     
-    # Проверяем, активна ли еще сессия
+    # Базовая проверка - если игра завершена, показываем результат
     if not game_session.is_active or game_session.lives <= 0:
         return redirect('result_page', session_id=session_id)
     
@@ -57,7 +67,7 @@ def game_page(request, session_id):
     })
 
 def submit_action(request, session_id):
-    """Обработка действия игрока"""
+    """Обработка действия игрока - ПРОСТАЯ ВЕРСИЯ"""
     if request.method == 'POST':
         game_session = get_object_or_404(GameSession, id=session_id)
         action_text = request.POST.get('action_text', '')
@@ -73,7 +83,7 @@ def submit_action(request, session_id):
         )
         
         # Создаем запись о действии
-        player_action = PlayerAction.objects.create(
+        PlayerAction.objects.create(
             game_session=game_session,
             action_text=action_text,
             survived=survived,
@@ -88,17 +98,47 @@ def submit_action(request, session_id):
             
         if game_session.lives <= 0:
             game_session.is_active = False
-            
+        
         game_session.save()
         
         return redirect('result_page', session_id=session_id)
     
     return redirect('game_page', session_id=session_id)
 
+def next_situation(request, session_id):
+    """Переход к следующей ситуации - УЛУЧШЕННАЯ ВЕРСИЯ"""
+    game_session = get_object_or_404(GameSession, id=session_id)
+    
+    # Проверяем, активна ли еще сессия
+    if not game_session.is_active or game_session.lives <= 0:
+        return redirect('result_page', session_id=session_id)
+    
+    # Выбираем случайную ситуацию (ВСЕГДА новую)
+    situations = Situation.objects.all()
+    
+    if situations.count() > 1:
+        # Если есть больше одной ситуации, исключаем текущую
+        current_situation = game_session.situation
+        available_situations = situations.exclude(id=current_situation.id)
+        if available_situations.exists():
+            new_situation = random.choice(available_situations)
+        else:
+            new_situation = random.choice(situations)
+    else:
+        new_situation = situations.first()
+    
+    # Обновляем сессию с новой ситуацией
+    game_session.situation = new_situation
+    game_session.save()
+    
+    print(f"DEBUG: Changed situation from {game_session.situation.id} to {new_situation.id}")  # Для отладки
+    
+    return redirect('game_page', session_id=session_id)
+
 def result_page(request, session_id):
     """Страница с результатом раунда"""
     game_session = get_object_or_404(GameSession, id=session_id)
-    latest_action = PlayerAction.objects.filter(game_session=game_session).last()
+    latest_action = PlayerAction.objects.filter(game_session=game_session).order_by('-created_at').first()
     
     return render(request, 'game/result.html', {
         'game_session': game_session,
@@ -107,11 +147,31 @@ def result_page(request, session_id):
     })
 
 def leaderboard(request):
-    """Таблица лидеров"""
-    # Получаем лучшие результаты (игроки с максимальным счетом)
-    best_sessions = GameSession.objects.filter(is_active=False).order_by('-score', '-id')[:10]
+    """Таблица лидеров - показывает лучший результат каждого игрока"""
+    # Получаем максимальный счет для каждого игрока
+    from django.db.models import Max
+    
+    best_scores = GameSession.objects.values('player__name').annotate(
+        best_score=Max('score')
+    ).order_by('-best_score')[:10]
+    
+    # Собираем информацию для отображения
+    leaders = []
+    for score_data in best_scores:
+        player_name = score_data['player__name']
+        best_score = score_data['best_score']
+        
+        # Находим сессию с этим счетом
+        best_session = GameSession.objects.filter(
+            player__name=player_name, 
+            score=best_score
+        ).order_by('-id').first()
+        
+        if best_session:
+            leaders.append(best_session)
+    
     return render(request, 'game/leaderboard.html', {
-        'leaders': best_sessions
+        'leaders': leaders
     })
 
 def create_situation(request):
